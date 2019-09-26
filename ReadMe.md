@@ -1,3 +1,9 @@
+# Custom Changes
+* top margin on search bar
+* smaller tile font
+* app list icon and font size changes along with top margin spacing for section
+
+
 # Tiled Menu
 
 https://store.kde.org/p/1160672/
