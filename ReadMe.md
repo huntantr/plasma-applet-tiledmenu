@@ -2,7 +2,7 @@
 * top margin on search bar
 * smaller tile font
 * app list icon and font size changes along with top margin spacing for section
-
+* add [user switcher](https://github.com/KDE/kdeplasma-addons/tree/master/applets/userswitcher) widget functionality into user menu
 
 # Tiled Menu
 
