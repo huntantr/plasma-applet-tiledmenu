@@ -3,7 +3,7 @@
 * [ ] smaller tile font
 * [ ] app list icon and font size changes along with top margin spacing for section
 * [ ] add [user switcher](https://github.com/KDE/kdeplasma-addons/tree/master/applets/userswitcher) widget functionality into user menu
-** [ ] show users that don't have a new session
+    * [ ] show users that don't have a new session
 
 # Tiled Menu
 
