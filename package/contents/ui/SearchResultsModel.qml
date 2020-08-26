@@ -24,10 +24,10 @@ ListModel {
 			for (var j = 0; j < runner.count; j++) {
 				// RunnerMatchesModel.modelForRow is NOT implemented.
 				// We need to use model.data(model.index(row, 0), role)
-				// https://github.com/KDE/plasma-desktop/blob/master/applets/kicker/plugin/abstractmodel.cpp#L35
-				// https://github.com/KDE/plasma-desktop/blob/master/applets/kicker/plugin/runnermatchesmodel.cpp#L54
+				// https://github.com/KDE/plasma-workspace/blame/master/applets/kicker/plugin/abstractmodel.cpp#L35
+				// https://github.com/KDE/plasma-workspace/blame/master/applets/kicker/plugin/runnermatchesmodel.cpp#L54
 
-				// https://github.com/KDE/plasma-desktop/blob/master/applets/kicker/plugin/actionlist.h#L30
+				// https://github.com/KDE/plasma-workspace/blame/master/applets/kicker/plugin/actionlist.h#L30
 				var DescriptionRole = Qt.UserRole + 1;
 				var GroupRole = DescriptionRole + 1;
 				var FavoriteIdRole = DescriptionRole + 2;
@@ -45,10 +45,17 @@ ListModel {
 				var url = runner.data(modelIndex, UrlRole);
 				if (typeof url === 'object') {
 					url = url.toString();
+				} else if (typeof url === 'undefined') {
+					url = ''
 				}
 				var icon = runner.data(modelIndex, Qt.DecorationRole);
 				if (typeof icon === 'object') {
 					icon = icon.toString();
+				}
+
+				var favoriteId = runner.data(modelIndex, FavoriteIdRole)
+				if (typeof favoriteId === 'undefined') {
+					favoriteId = ''
 				}
 
 				var resultItem = {
@@ -59,7 +66,7 @@ ListModel {
 					description: runner.data(modelIndex, DescriptionRole),
 					icon: icon,
 					url: url,
-					favoriteId: runner.data(modelIndex, FavoriteIdRole),
+					favoriteId: favoriteId,
 					largeIcon: false, // for KickerListView
 				};
 

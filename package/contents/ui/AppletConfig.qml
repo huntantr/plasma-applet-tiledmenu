@@ -17,9 +17,20 @@ Item {
 	readonly property int sidebarRightMargin: 4 * units.devicePixelRatio
 	readonly property int sidebarPopupButtonSize: plasmoid.configuration.sidebarPopupButtonSize * units.devicePixelRatio
 	readonly property int appListWidth: plasmoid.configuration.appListWidth * units.devicePixelRatio
+	readonly property int tileEditorMinWidth: Math.max(350, 350 * units.devicePixelRatio)
 
 	property bool showSearch: false
-	readonly property int appAreaWidth: (showSearch ? appListWidth : 0)
+	property bool isEditingTile: false
+	readonly property int appAreaWidth: {
+		if (isEditingTile) {
+			return tileEditorMinWidth
+		} else if (showSearch) {
+			return appListWidth
+		} else {
+			return 0
+		}
+	}
+	readonly property bool hideSearchField: plasmoid.configuration.hideSearchField
 	readonly property int leftSectionWidth: sidebarWidth + sidebarRightMargin + appAreaWidth
 
 	readonly property real tileScale: plasmoid.configuration.tileScale
@@ -54,7 +65,13 @@ Item {
 		if (plasmoid.configuration.fullscreen) {
 			return Screen.desktopAvailableHeight
 		} else {
-			return plasmoid.configuration.popupHeight * units.devicePixelRatio
+			// implicit Math.floor() when cast as int
+			var dPR = units.devicePixelRatio
+			var pH3 = plasmoid.configuration.popupHeight
+			var pH4 = pH3 * dPR
+			var pH5 = Math.floor(pH4)
+			// console.log('pH.get', 'dPR='+dPR, 'pH3='+pH3, 'pH4='+pH4, 'pH5='+pH5)
+			return pH5
 		}
 	}
 	
@@ -79,6 +96,7 @@ Item {
 		}
 	}
 	readonly property color defaultTileColor: plasmoid.configuration.defaultTileColor || themeButtonBgColor
+	readonly property bool defaultTileGradient: plasmoid.configuration.defaultTileGradient
 	readonly property color sidebarBackgroundColor: plasmoid.configuration.sidebarBackgroundColor || theme.backgroundColor
 	readonly property color menuItemTextColor2: setAlpha(theme.textColor, 0.6)
 	readonly property color favHoverOutlineColor: setAlpha(theme.textColor, 0.8)

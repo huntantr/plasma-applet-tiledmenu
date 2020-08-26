@@ -57,6 +57,7 @@ Item {
 				text: i18n("Tiles Only")
 				onClicked: searchView.showTilesOnly()
 				checked: searchView.showingOnlyTiles
+				visible: checked || plasmoid.configuration.defaultAppListView == 'TilesOnly'
 			}
 			SidebarViewButton {
 				appletIconName: "view-list-alphabetically"

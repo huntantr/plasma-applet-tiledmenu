@@ -15,6 +15,12 @@ Item {
 	width: modelData.w * cellBoxSize
 	height: modelData.h * cellBoxSize
 
+	function fixCoordinateBindings() {
+		x = Qt.binding(function(){ return modelData.x * cellBoxSize })
+		y = Qt.binding(function(){ return modelData.y * cellBoxSize })
+		z = 0
+	}
+
 	AppObject {
 		id: appObj
 		tile: modelData
@@ -54,24 +60,7 @@ Item {
 		hoverOutlineSize: tileGrid.hoverOutlineSize
 		mouseArea: tileMouseArea
 	}
-
 	//--- View End
-
-	DragAndDrop.DragArea {
-		anchors.fill: parent
-		enabled: !plasmoid.configuration.tilesLocked
-		delegate: tileItemView
-		onDragStarted: {
-			console.log('onDragStarted', JSON.stringify(modelData), index, tileModel.length)
-			// tileGrid.draggedItem = tileModel.splice(index, 1)[0]
-			tileGrid.startDrag(index)
-			tileGrid.dropOffsetX = Math.floor(tileMouseArea.pressX / cellBoxSize) * cellBoxSize
-			tileGrid.dropOffsetY = Math.floor(tileMouseArea.pressY / cellBoxSize) * cellBoxSize
-		}
-		onDrop: {
-			console.log('DragArea.onDrop', draggedItem)
-			tileGrid.resetDrag()
-		}
 
 		MouseArea {
 			id: tileMouseArea
@@ -88,6 +77,9 @@ Item {
 				pressY = mouse.y
 			}
 
+			drag.target: plasmoid.configuration.tilesLocked ? undefined : tileItem
+			// drag.onActiveChanged: console.log('drag.active', drag.active)
+
 			// This MouseArea will spam "QQuickItem::ungrabMouse(): Item is not the mouse grabber."
 			// but there's no other way of having a clickable drag area.
 			onClicked: {
@@ -96,13 +88,53 @@ Item {
 				if (mouse.button == Qt.LeftButton) {
 					if (tileEditorView && tileEditorView.tile) {
 						openTileEditor()
-					} else {
+					} else if (modelData.url) {
 						appsModel.tileGridModel.runApp(modelData.url)
 					}
 				} else if (mouse.button == Qt.RightButton) {
 					contextMenu.open(mouse.x, mouse.y)
 				}
 			}
+		}
+
+	Drag.dragType: Drag.Automatic
+	Drag.proposedAction: Qt.MoveAction
+
+	// We use this drag pattern to use the internal drag with events.
+	// https://stackoverflow.com/a/24729837/947742
+	readonly property bool dragActive: tileMouseArea.drag.active
+	onDragActiveChanged: {
+		if (dragActive) {
+			// console.log("drag started")
+			// console.log('onDragStarted', JSON.stringify(modelData), index, tileModel.length)
+			tileGrid.startDrag(index)
+			// tileGrid.dropOffsetX = 0
+			// tileGrid.dropOffsetY = 0
+			tileItem.z = 1
+			Drag.start()
+		} else {
+			// console.log("drag finished")
+			// console.log('DragArea.onDrop', draggedItem)
+			Qt.callLater(tileGrid.resetDrag)
+			Qt.callLater(tileItem.fixCoordinateBindings)
+			Drag.drop() // Breaks QML context.
+			// We need to use callLater to call functions after Drag.drop().
+		}
+	}
+
+	Loader {
+		id: groupEffectLoader
+		visible: tileMouseArea.containsMouse
+		active: appObj.isGroup && visible
+		sourceComponent: Rectangle {
+			id: groupOutline
+			color: "transparent"
+			border.width: 1 * units.devicePixelRatio
+			border.color: "#80ffffff"
+			y: modelData.h * cellBoxSize
+			z: 100
+			width: appObj.groupRect.w * cellBoxSize
+			height: appObj.groupRect.h * cellBoxSize
 		}
 	}
 

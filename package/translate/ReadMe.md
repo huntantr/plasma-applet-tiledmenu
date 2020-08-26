@@ -1,6 +1,6 @@
-> Version 4 of Zren's i18n scripts.
+> Version 7 of Zren's i18n scripts.
 
-With KDE Frameworks v5.37 and above, translations are bundled with the *.plasmoid file downloaded from the store.
+With KDE Frameworks v5.37 and above, translations are bundled with the `*.plasmoid` file downloaded from the store.
 
 ## Install Translations
 
@@ -16,33 +16,38 @@ Or if you know how to make a pull request
 
 ## Scripts
 
-* `./merge` will parse the `i18n()` calls in the `*.qml` files and write it to the `template.pot` file. Then it will merge any changes into the `*.po` language files.
-* `./build` will convert the `*.po` files to it's binary `*.mo` version and move it to `contents/locale/...` which will bundle the translations in the *.plasmoid without needing the user to manually install them.
-* `./install` will convert the `*.po` files to it's binary `*.mo` version and move it to `~/.local/share/locale/...`.
-* `./plasmoidlocaletest` will run `./build` then `plasmoidviewer` (part of `plasma-sdk`).
+* `sh ./merge` will parse the `i18n()` calls in the `*.qml` files and write it to the `template.pot` file. Then it will merge any changes into the `*.po` language files.
+* `sh ./build` will convert the `*.po` files to it's binary `*.mo` version and move it to `contents/locale/...` which will bundle the translations in the `*.plasmoid` without needing the user to manually install them.
+* `sh ./plasmoidlocaletest` will run `./build` then `plasmoidviewer` (part of `plasma-sdk`).
 
 ## Links
 
+* https://zren.github.io/kde/docs/widget/#translations-i18n
 * https://techbase.kde.org/Development/Tutorials/Localization/i18n_Build_Systems
+* https://api.kde.org/frameworks/ki18n/html/prg_guide.html
 
 ## Examples
 
-* https://websvn.kde.org/trunk/l10n-kf5/fr/messages/kde-workspace/
+* https://l10n.kde.org/stats/gui/trunk-kf5/team/fr/plasma-desktop/
 * https://github.com/psifidotos/nowdock-plasmoid/tree/master/po
 * https://github.com/kotelnik/plasma-applet-redshift-control/tree/master/translations
 
 ## Status
 |  Locale  |  Lines  | % Done|
 |----------|---------|-------|
-| Template |      97 |       |
-| de       |   41/97 |   42% |
-| es       |   75/97 |   77% |
-| fr       |   22/97 |   22% |
-| id       |   97/97 |  100% |
-| ko       |   95/97 |   97% |
-| nl_NL    |   97/97 |  100% |
-| pl       |    0/97 |    0% |
-| pt_BR    |   97/97 |  100% |
-| pt_PT    |   87/97 |   89% |
-| ru       |   90/97 |   92% |
-| zh_CN    |   86/97 |   88% |
+| Template |     115 |       |
+| de       | 112/115 |   97% |
+| es       |  79/115 |   68% |
+| fr       | 100/115 |   86% |
+| hr       |  93/115 |   80% |
+| id       | 101/115 |   87% |
+| ja       | 106/115 |   92% |
+| ko       |  99/115 |   86% |
+| nl       | 113/115 |   98% |
+| pl       | 103/115 |   89% |
+| pt_BR    | 101/115 |   87% |
+| pt       |  98/115 |   85% |
+| ro       | 103/115 |   89% |
+| ru       | 112/115 |   97% |
+| tr       | 112/115 |   97% |
+| zh_CN    |  90/115 |   78% |

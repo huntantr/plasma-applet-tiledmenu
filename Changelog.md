@@ -1,3 +1,74 @@
+## v39 - July 22 2020
+
+* Fix RecentUsage Apps, it now uses iconName instead of icon (Issue #76)
+* Added config toggle for hiding the search field (Issue #81)
+* Attempt to fix popupHeight shrinking when config is open bug. Only affects certain users with a particular screen scaling. (Issue #79)
+* Updated Dutch translations by @Vistaus (Pull Request #82)
+
+## v38 - July 8 2020
+
+* Added Russian translations by @Platun0v (Pull Request #77)
+* Added Turkish translations by @oltulu (Pull Request #78)
+
+## v37 - June 29 2020
+
+* Fix right clicking an app (or dragging) to pin an app from the Search Results (Issue #74)
+* Added Japanese translations by @ymadd (Pull Request #73)
+
+## v36 - June 23 2020
+
+* Use Math.ceil() to fix popup growing shorter every second (Issue #71)
+* Fix tips list getting stuck at 1-2 cols width (Issue #72)
+* Updated German translations by @4VRDriver (Pull Request #66)
+
+## v35 - June 10 2020
+
+* Add splash text to help user get started. Includes a button to use a default tile layout with: LibreOffice Writer, Calc, KMail or Gmail, Software Center (Octopi, YaST, Discover), Web Browser, and Steam.
+* Add the Productivity/Explore group presets to the context menu when tiles are unlocked. Added the Gmail tile preset to the context menu too.
+* Re-Enable the calculator search plugin by default. It was disabled after Plasma 5.9 as it caused Plasma to crash. Please report if you notice any crashes when searching. (Issue #28)
+* Implement configuration for default search filters (Issue #28)
+* Scale the app list section headers. They'll always be 4pt larger than the app list labels. (Issue #38)
+* Add popup height control in config (Issue #57)
+* Parse `_NETSCAPE_URL` from firefox/chromium url drag+drop to use the website title for the label.
+* Fixed French "Lock Tiles" message by https://www.pling.com/u/eric63/
+* Updated Dutch translation by @Vistaus (Pull Request #63)
+
+## v34 - May 8 2020
+
+* Add vertical gradient to tiles, which can be toggle off in the config.
+* Only show "Tiles Only" button if it's the default view.
+* Update ConfigPage to fix scrollbar overlap (Issue #62)
+* Fix xdg folder button labels in the config.
+* Remove old code that's no longer used (Issue #13), and update a couple config controls.
+* Add Romanian translations by https://www.pling.com/u/sebyx87
+
+## v33 - April 24 2020
+
+* Use QML's internal Drag and Drop instead of Plasma's global drag.
+* Fix adding tiles when the launcher is in a subdir (like wine apps).
+* Show outline around grouped tiles when hovering group label. Dragged group highlight follows cursor.
+* Remove hardcoded font.pointSize=10 assignment in TileItemView.
+* Allow groups to have urls / run apps when left clicked.
+* Use 350px AppList width when editing a tile (Issue #49)
+* Updated German translations by @4tmelDriver (Pull Request #56)
+* Prepare vertical gradient code.
+
+## v32 - February 12 2020
+
+* Hide Tiles Only button when tile grid is hidden completely.
+* Cleanup a few warnings in plasmashell logs.
+* Updated Dutch translation by @Vistaus (Pull Request #51)
+* Updated Polish translations by @Qik000 (Issue #55)
+* Grab a few translations from KDE as a few messages were changed in Plasma 5.18.
+
+## v31 - October 24 2019
+
+* Configurable sidebar width and icon size. Default sidebar is smaller. Popup buttons have a hover outline. Popup appears above, like other context menus and Win10.
+* Close menu right away when launching app via search, instead of waiting for the app to steal focus before closing.
+* Add Portuguese (Brazil) translation by @herzenschein (Pull Request #46)
+* Update Portuguese (Portugal) translation by @herzenschein (Pull Request #47)
+* Add Croatian translation by @VladimirMikulic (Pull Request #50)
+
 ## v30 - April 4 2019
 
 * Fix sidebar menus not resizing to fix translated text (Issue #37).

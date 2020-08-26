@@ -47,6 +47,7 @@ Item {
 	readonly property bool showingAppList: stackView.currentItem == appsView || stackView.currentItem == jumpToLetterView
 	readonly property bool showingAppsAlphabetically: config.showSearch && appsModel.order == "alphabetical" && showingAppList
 	readonly property bool showingAppsCategorically: config.showSearch && appsModel.order == "categories" && showingAppList
+	readonly property bool showSearchField: config.hideSearchField ? !!searchField.text : true
 
 	property bool searchOnTop: false
 
@@ -82,7 +83,7 @@ Item {
 			when: searchOnTop
 			PropertyChanges {
 				target: stackViewContainer
-				anchors.topMargin: searchField.height
+				anchors.topMargin: searchField.visible ? searchField.height : 0
 			}
 			PropertyChanges {
 				target: searchField
@@ -94,7 +95,7 @@ Item {
 			when: !searchOnTop
 			PropertyChanges {
 				target: stackViewContainer
-				anchors.bottomMargin: searchField.height
+				anchors.bottomMargin: searchField.visible ? searchField.height : 0
 			}
 			PropertyChanges {
 				target: searchField
@@ -217,6 +218,10 @@ Item {
 				active = true
 				item.open(tile)
 			}
+			readonly property bool isCurrentView: stackView.currentItem == tileEditorView
+			onIsCurrentViewChanged: {
+				config.isEditingTile = isCurrentView
+			}
 		}
 
 		SearchStackView {
@@ -232,7 +237,7 @@ Item {
 
 	SearchField {
 		id: searchField
-		// width: 430
+		visible: !config.isEditingTile && searchView.showSearchField
 		height: config.searchFieldHeight
 		anchors.left: parent.left
 		anchors.right: parent.right

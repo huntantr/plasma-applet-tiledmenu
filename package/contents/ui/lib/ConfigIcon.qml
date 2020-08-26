@@ -1,3 +1,5 @@
+// Version: 3
+
 import QtQuick 2.0
 import QtQuick.Controls 1.0
 import QtQuick.Layouts 1.0
@@ -23,7 +25,8 @@ RowLayout {
 		}
 	}
 	property int previewIconSize: units.iconSizes.medium
-	property string defaultValue: "start-here-kde"
+	property string defaultValue: ""
+	property string placeholderValue: ""
 
 	// org.kde.plasma.kickoff
 	Button {
@@ -57,7 +60,7 @@ RowLayout {
 				anchors.centerIn: parent
 				width: previewIconSize
 				height: previewIconSize
-				source: configIcon.value
+				source: configIcon.value || configIcon.placeholderValue
 			}
 		}
 
@@ -90,6 +93,8 @@ RowLayout {
 
 				text: configIcon.configValue
 				onTextChanged: serializeTimer.restart()
+
+				placeholderText: configIcon.placeholderValue
 
 				ToolButton {
 					iconName: "edit-clear"
@@ -127,6 +132,10 @@ RowLayout {
 	Timer { // throttle
 		id: serializeTimer
 		interval: 300
-		onTriggered: plasmoid.configuration[configKey] = configIcon.value
+		onTriggered: {
+			if (configKey) {
+				plasmoid.configuration[configKey] = configIcon.value
+			}
+		}
 	}
 }
