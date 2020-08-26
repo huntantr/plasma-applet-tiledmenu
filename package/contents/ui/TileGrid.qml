@@ -9,12 +9,10 @@ import org.kde.draganddrop 2.0 as DragAndDrop
 import org.kde.plasma.private.kicker 0.1 as Kicker
 import org.kde.kquickcontrolsaddons 2.0
 
-// MouseArea {
-DragAndDrop.DropArea {
-	id: tileGrid
+import "Utils.js" as Utils
 
-	// hoverEnabled: true
-	property bool isDragging: cellRepeater.dropping
+DropArea {
+	id: tileGrid
 
 	property int cellSize: 60 * units.devicePixelRatio
 	property real cellMargin: 3 * units.devicePixelRatio
@@ -32,6 +30,9 @@ DragAndDrop.DropArea {
 	property int columns: Math.max(minColumns, maxColumn)
 	property int rows: Math.max(minRows, maxRow)
 
+
+	//--- Drag and Drop properties
+	property bool isDragging: false
 	property var addedItem: null
 	readonly property bool adding: addedItem
 	property int draggedIndex: -1
@@ -44,6 +45,46 @@ DragAndDrop.DropArea {
 	readonly property int dropWidth: draggedItem ? draggedItem.w : addedItem ? addedItem.w : 0
 	readonly property int dropHeight: draggedItem ? draggedItem.h : addedItem ? addedItem.h : 0
 	property bool canDrop: false
+	readonly property bool hasDrag: tileGrid.editing && dropHoverX >= 0 && dropHoverY >= 0
+	readonly property bool isDraggingGroup: hasDrag && draggedItem && draggedItem.tileType == "group"
+	readonly property var draggedGroupRect: {
+		if (isDraggingGroup) {
+			return getGroupAreaRect(draggedItem)
+		} else {
+			return null
+		}
+	}
+
+	//--- Drag and Drop events
+	// onContainsDragChanged: console.log('containsDrag', containsDrag)
+	onEntered: {
+		// console.log('onEntered', drag)
+		dragTick(drag)
+	}
+	onPositionChanged: {
+		// console.log('onPositionChanged', drag)
+		dragTick(drag)
+	}
+	onExited: {
+		// console.log('onExited')
+		resetDragHover()
+	}
+	onDropped: {
+		// console.log('onDropped', drop)
+		if (draggedItem) {
+			tileGrid.moveTile(draggedItem, dropHoverX, dropHoverY)
+			tileGrid.resetDrag()
+			// event.accept(Qt.MoveAction)
+		} else if (addedItem) {
+			addedItem.x = dropHoverX
+			addedItem.y = dropHoverY
+			tileGrid.tileModel.push(addedItem)
+			tileGrid.tileModelChanged()
+			tileGrid.resetDrag()
+		}
+	}
+
+	// Drag and Drop functions
 	function resetDragHover() {
 		dropHoverX = -1
 		dropHoverY = -1
@@ -53,14 +94,14 @@ DragAndDrop.DropArea {
 	}
 	function resetDrag() {
 		resetDragHover()
-		cellRepeater.dropping = false
+		isDragging = false
 		draggedIndex = -1
 	}
 	function startDrag(index) {
 		draggedIndex = index
 		dropHoverX = draggedItem.x
 		dropHoverY = draggedItem.y
-		cellRepeater.dropping = true
+		isDragging = true
 	}
 
 	function tileWithin(tile, x1, y1, x2, y2) {
@@ -86,16 +127,31 @@ DragAndDrop.DropArea {
 			if (tile.tileType == "group"
 				&& tileWithin(tile, x1, y1, x2, y2)
 			) {
+				// We effectively use Math.min() here as we shrink the box tileWithin uses.
 				y2 = tile.y - 1
 				// console.log('group found at y =', tile.y, 'y2 set to', y2)
 			}
 		}
+
+		var lowestTileY = y1
+		// console.log('lowestTileY start at y = ', lowestTileY)
+		for (var i = 0; i < tileModel.length; i++) {
+			var tile = tileModel[i]
+			if (tileWithin(tile, x1, y1, x2, y2)) {
+				lowestTileY = Math.max(lowestTileY, tile.y + tile.h - 1)
+				// console.log('lowestTileY set to', lowestTileY, JSON.stringify(tile))
+			}
+		}
+
+		y2 = Math.min(lowestTileY, y2)
 
 		return {
 			x1: x1,
 			y1: y1,
 			x2: x2,
 			y2: y2,
+			w: x2 - x1 + 1,
+			h: y2 - y1 + 1,
 		}
 	}
 
@@ -124,62 +180,56 @@ DragAndDrop.DropArea {
 		tileGrid.tileModelChanged()
 	}
 
-	onDrop: {
-		// console.log('onDrop', JSON.stringify(draggedItem))
-		if (draggedItem) {
-			tileGrid.moveTile(draggedItem, dropHoverX, dropHoverY)
-			tileGrid.resetDrag()
-			// event.accept(Qt.MoveAction)
-		} else if (addedItem) {
-			addedItem.x = dropHoverX
-			addedItem.y = dropHoverY
-			tileGrid.tileModel.push(addedItem)
-			tileGrid.tileModelChanged()
-			tileGrid.resetDrag()
-		}
-	}
-	function parseDropUrl(url) {
-		var workingDir = Qt.resolvedUrl('.')
-		var endsWithDesktop = url.indexOf('.desktop') === url.length - '.desktop'.length
-		var isRelativeDesktopUrl = endsWithDesktop && (
-			url.indexOf(workingDir) === 0
-			// || url.indexOf('file:///usr/share/applications/') === 0
-			// || url.indexOf('/.local/share/applications/') >= 0
-			|| url.indexOf('/share/applications/') >= 0 // 99% certain this desktop file should be accessed relatively.
-		)
-		logger.debug('parseDropUrl', workingDir, endsWithDesktop, isRelativeDesktopUrl)
-		logger.debug('onUrlDropped', 'url', url)
-		if (isRelativeDesktopUrl) {
-			// Remove the path because .favoriteId is just the file name.
-			// However passing the favoriteId in mimeData.url will prefix the current QML path because it's a QUrl.
-			var tokens = url.toString().split('/')
-			var favoriteId = tokens[tokens.length-1]
-			logger.debug('isRelativeDesktopUrl', tokens, favoriteId)
-			return favoriteId
-		} else {
-			return url
-		}
-	}
-
+	// QQuickDropEvent
+	// https://github.com/qt/qtdeclarative/blob/a4aa8d9ade44d75cb5a1d84bd7c1773fadc73095/src/quick/items/qquickdroparea_p.h#L63
 	function dragTick(event) {
+		// console.log('dragTick', event.x, event.y)
 		var dragX = event.x + scrollView.flickableItem.contentX - dropOffsetX
 		var dragY = event.y + scrollView.flickableItem.contentY - dropOffsetY
 		var modelX = Math.floor(dragX / cellBoxSize)
 		var modelY = Math.floor(dragY / cellBoxSize)
-		// console.log('onDragMove', event.x, event.y, modelX, modelY)
+		var globalPoint = popup.mapFromItem(tileGrid, event.x, event.y)
+		// console.log('onDragMove', event.x, event.y, modelX, modelY, globalPoint)
 		scrollUpArea.checkContains(event)
 		scrollDownArea.checkContains(event)
 
 		if (draggedItem) {
 		} else if (addedItem) {
-		} else if (event && event.mimeData && event.mimeData.url) {
-			var url = event.mimeData.url.toString()
-			// console.log('new addedItem', event.mimeData.url, url)
-			url = parseDropUrl(url)
+		} else if (event && event.hasUrls && event.urls) {
+			if (event.keys && event.keys.indexOf('favoriteId') >= 0) {
+				var url = event.getDataAsString('favoriteId')
+				url = Utils.parseDropUrl(url)
+			} else {
+				var url = event.urls[0]
+				// console.log('new addedItem', event.urls, url)
+				url = Utils.parseDropUrl(url)
+			}
+			// console.log('new addedItem')
+			// console.log('\t', 'urls', event.urls)
+			// console.log('\t', 'url', url)
+			// console.log('\t', 'keys', event.keys)
+			// for (var i = 0; i < event.keys.length; i++) {
+			// 	var key = event.keys[i]
+			// 	var value = event.getDataAsString(key)
+			// 	console.log('\t', 'mimeData', key, value)
+			// }
 
 			addedItem = newTile(url)
 			dropHoverX = modelX
 			dropHoverY = modelY
+
+			// Firefox/Chromium url dropped
+			if (event.keys.indexOf('_NETSCAPE_URL')) {
+				var netscapeUrl = event.getDataAsString('_NETSCAPE_URL')
+				var tokens = netscapeUrl.split('\n')
+				if (tokens.length >= 2) {
+					var title = tokens[1].trim()
+					if (title) {
+						addedItem.label = title
+						addedItem.icon = 'internet-web-browser'
+					}
+				}
+			}
 		} else {
 			return
 		}
@@ -187,12 +237,6 @@ DragAndDrop.DropArea {
 		dropHoverX = Math.max(0, Math.min(modelX, columns - dropWidth))
 		dropHoverY = Math.max(0, modelY)
 		canDrop = !hits(dropHoverX, dropHoverY, dropWidth, dropHeight)
-	}
-	onDragEnter: dragTick(event)
-	onDragMove: dragTick(event)
-	onDragLeave: {
-		// console.log('onExited')
-		resetDragHover()
 	}
 
 	property var hitBox: [] // hitBox[y][x]
@@ -385,10 +429,9 @@ DragAndDrop.DropArea {
 
 			Repeater {
 				id: cellRepeater
-				property int cellCount: columns * rows
-				property bool dropping: false
+				readonly property int cellCount: columns * rows
 				onCellCountChanged: {
-					if (!dropping) {
+					if (!isDragging) {
 						model = cellCount
 					}
 				}
@@ -403,18 +446,18 @@ DragAndDrop.DropArea {
 					width: cellBoxSize
 					height: cellBoxSize
 
-					readonly property bool hasDrag: tileGrid.editing && dropHoverX >= 0 && dropHoverY >= 0
 					readonly property bool tileHovered: (hasDrag
 						&& dropHoverX <= modelX && modelX < dropHoverX + dropWidth
 						&& dropHoverY <= modelY && modelY < dropHoverY + dropHeight
 					)
-
-					readonly property bool isDraggingGroup: hasDrag && draggedItem && draggedItem.tileType == "group"
 					readonly property bool groupAreaHovered: {
 						if (isDraggingGroup) {
-							var groupArea = getGroupAreaRect(draggedItem)
-							return groupArea.x1 <= modelX && modelX <= groupArea.x2
-								&& groupArea.y1 <= modelY && modelY <= groupArea.y2
+							var groupX1 = dropHoverX
+							var groupY1 = dropHoverY + dropHeight
+							var groupX2 = groupX1 + draggedGroupRect.w - 1
+							var groupY2 = groupY1 + draggedGroupRect.h - 1
+							return groupX1 <= modelX && modelX <= groupX2
+								&& groupY1 <= modelY && modelY <= groupY2
 						} else {
 							return false
 						}
@@ -470,6 +513,11 @@ DragAndDrop.DropArea {
 					}
 				}
 
+				TileGridPresets {
+					id: tileGridPresets
+					visible: !plasmoid.configuration.tilesLocked
+				}
+
 				PlasmaComponents.MenuItem {
 					icon: plasmoid.configuration.tilesLocked ? "object-unlocked" : "object-locked"
 					text: plasmoid.configuration.tilesLocked ? i18n("Unlock Tiles") : i18n("Lock Tiles")
@@ -490,6 +538,16 @@ DragAndDrop.DropArea {
 				
 			}
 		}
+	}
+
+	Loader {
+		id: tileGridSplashLoader
+		anchors.centerIn: parent
+		active: tileModel.length == 0 && !tileGrid.editing
+		visible: active && width <= parent.width
+		source: "TileGridSplash.qml"
+		property alias tileGridPresets: tileGridPresets
+		property int maxWidth: parent.width
 	}
 
 	/* Scroll on hover with drag */
@@ -595,11 +653,6 @@ DragAndDrop.DropArea {
 		}
 	}
 
-	function addTile(tile) {
-		tileModel.push(tile)
-		tileModelChanged()
-	}
-
 	function findOpenPos(w, h) {
 		for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < columns - (w-1); x++) {
@@ -633,6 +686,7 @@ DragAndDrop.DropArea {
 		}
 	}
 	function addApp(url, x, y) {
+		url = Utils.parseDropUrl(url)
 		var tile = newTile(url)
 		parseTileXY(tile, x, y)
 		tileModel.push(tile)
@@ -653,16 +707,39 @@ DragAndDrop.DropArea {
 	function limit(minValue, value, maxValue) {
 		return Math.max(minValue, Math.min(value, maxValue))
 	}
-	function addGroup(x, y) {
+
+	function addTile(x, y, props) {
 		var tile = newTile("")
 		parseTileXY(tile, x, y)
-		tile.tileType = "group"
-		tile.label = i18nc("default group label", "Group")
-		tile.w = limit(2, columns-x, 6) // 6 unless we have less columns.
-		tile.h = 1
+		if (typeof props !== "undefined") {
+			var keys = Object.keys(props)
+			for (var i = 0; i < keys.length; i++) {
+				var key = keys[i]
+				var value = props[key]
+				tile[key] = value
+			}
+		}
 		tileModel.push(tile)
 		tileModelChanged()
 		return tile
+	}
+
+	function addGroup(x, y, props) {
+		var groupProps = {
+			tileType: "group",
+			label: i18nc("default group label", "Group"),
+			w: limit(2, columns-x, 6), // 6 unless we have less columns.
+			h: 1,
+		}
+		if (typeof props !== "undefined") {
+			var keys = Object.keys(props)
+			for (var i = 0; i < keys.length; i++) {
+				var key = keys[i]
+				var value = props[key]
+				groupProps[key] = value
+			}
+		}
+		return addTile(x, y, groupProps)
 	}
 
 	signal editTile(var tile)

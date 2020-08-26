@@ -6,6 +6,7 @@ import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.private.kicker 0.1 as Kicker
 import org.kde.kcoreaddons 1.0 as KCoreAddons
+import org.kde.kquickcontrolsaddons 2.0 as KQuickControlsAddons
 
 import "lib"
 
@@ -46,7 +47,12 @@ Item {
 
 			dragIconSize: units.iconSizes.medium
 
-			onDropped: widget.draggedFavoriteId = ""
+			// Used when we only have a string and don't have a QIcon.
+			// DragHelper.startDrag(...) requires a QIcon. See Issue #75.
+			property var defaultIconItem: KQuickControlsAddons.QIconItem {
+				id: defaultIconItem
+			}
+			property alias defaultIcon: defaultIconItem.icon
 		}
 
 		Kicker.ProcessRunner {
@@ -68,13 +74,6 @@ Item {
 			}
 		}
 	}
-
-	// Workaround for passing the favoriteId to the drop handler.
-	// Use until event.mimeData.mimeData is exposed.
-	// https://github.com/KDE/kdeclarative/blob/0e47f91b3a2c93655f25f85150faadad0d65d2c1/src/qmlcontrols/draganddrop/DeclarativeDragDropEvent.cpp#L66
-	property string draggedFavoriteId: ""
-	// onDraggedFavoriteIdChanged: console.log('onDraggedFavoriteIdChanged', draggedFavoriteId)
-
 
 	AppletConfig {
 		id: config
@@ -159,7 +158,14 @@ Item {
 		interval: 200
 		onTriggered: {
 			if (!plasmoid.configuration.fullscreen) {
-				plasmoid.configuration.popupHeight = height / units.devicePixelRatio
+				// Need to Math.ceil when writing to fix (Issue #71)
+				var dPR = units.devicePixelRatio
+				var pH2 = height / dPR
+				var pH3 = Math.ceil(pH2)
+				// console.log('pH.set', 'dPR='+dPR, 'pH1='+height, 'pH2='+pH2, 'pH3='+pH3)
+				if (plasmoid.configuration.popupHeight != pH3) {
+					plasmoid.configuration.popupHeight = pH3
+				}
 			}
 		}
 	}

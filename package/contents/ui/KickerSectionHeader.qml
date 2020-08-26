@@ -6,7 +6,7 @@ import org.kde.plasma.components 2.0 as PlasmaComponents
 MouseArea {
 	id: sectionDelegate
 
-	width: parent.width
+	width: ListView.view.width
 	// height: childrenRect.height
 	implicitHeight: listView.iconSize
 
@@ -26,8 +26,9 @@ MouseArea {
 				return section
 			}
 		}
-		font.bold: true
-		font.pointSize: 14 * units.devicePixelRatio
+
+		// Add 4pt to font. Default 10pt => 14pt
+		font.pointSize: theme.defaultFont.pointSize + 4
 
 		property bool centerOverIcon: sectionHeading.contentWidth <= listView.iconSize
 		width: centerOverIcon ? listView.iconSize : parent.width

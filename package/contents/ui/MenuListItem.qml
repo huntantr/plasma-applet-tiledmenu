@@ -7,7 +7,7 @@ import org.kde.draganddrop 2.0 as DragAndDrop
 AppToolButton {
 	id: itemDelegate
 
-	width: parent.width
+	width: ListView.view.width
 	implicitHeight: row.implicitHeight
 
 	property var parentModel: typeof modelList !== "undefined" && modelList[index] ? modelList[index].parentModel : undefined
@@ -18,6 +18,7 @@ AppToolButton {
 	property string secondRowText: showItemUrl && model.url ? model.url : modelDescription
 	property bool secondRowVisible: secondRowText
 	property string launcherUrl: model.favoriteId || model.url
+	property string iconName: model.iconName || ''
 	property alias iconSource: itemIcon.source
 	property int iconSize: model.largeIcon ? listView.iconSize * 2 : listView.iconSize
 
@@ -53,11 +54,16 @@ AppToolButton {
 			&& dragHelper.isDrag(pressX, pressY, mouse.x, mouse.y) // Mouse moved far enough?
 	}
 	function startDrag() {
-		widget.draggedFavoriteId = model.favoriteId
-
-		// Requires Plasma 5.9 (probably) https://github.com/KDE/plasma-desktop/commit/85d946b206f6e8a12cf0a03b2386279ff2b0ff1a
-		// dragHelper.startDrag(widget, model.url, iconInstance, "favoriteId", model.favoriteId)
-		dragHelper.startDrag(widget, model.url || model.favoriteId, iconInstance)
+		// Note that we fallback from url to favoriteId for "Most Used" apps.
+		var dragIcon = iconInstance
+		if (typeof dragIcon === "string") {
+			// startDrag must use QIcon. See Issue #75.
+			dragIcon = dragHelper.defaultIcon
+		}
+		// console.log('startDrag', widget, model.url, "favoriteId", model.favoriteId)
+		// console.log('    iconInstance', iconInstance)
+		// console.log('    dragIcon', dragIcon)
+		dragHelper.startDrag(widget, model.url || model.favoriteId, dragIcon, "favoriteId", model.favoriteId)
 
 		resetDragState()
 	}
@@ -103,7 +109,7 @@ AppToolButton {
 
 				animated: false
 				// usesPlasmaTheme: false
-				source: itemDelegate.iconInstance
+				source: itemDelegate.iconName || itemDelegate.iconInstance
 			}
 		}
 

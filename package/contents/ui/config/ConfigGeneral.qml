@@ -61,9 +61,23 @@ ConfigPage {
 			configKey: 'fullscreen'
 		}
 
-		ConfigSpinBox {
-			configKey: 'favGridCols'
-			before: i18n("Grid Columns")
+		RowLayout {
+			spacing: 0
+			visible: !plasmoid.configuration.fullscreen
+
+			ConfigSpinBox {
+				configKey: 'favGridCols'
+				before: i18n("Grid Columns")
+			}
+
+			Label {
+				text: " x "
+			}
+
+			ConfigSpinBox {
+				configKey: 'popupHeight'
+				suffix: i18n("px")
+			}
 		}
 	}
 
@@ -72,6 +86,7 @@ ConfigPage {
 
 		ConfigIcon {
 			configKey: 'icon'
+			defaultValue: 'start-here-kde'
 			previewIconSize: units.iconSizes.large
 
 			ConfigCheckBox {
@@ -125,6 +140,10 @@ ConfigPage {
 				label: ""
 				configKey: 'defaultTileColor'
 			}
+			ConfigCheckBox {
+				text: i18n("Gradient")
+				configKey: 'defaultTileGradient'
+			}
 		}
 		RadioButton {
 			text: i18n("Transparent")
@@ -165,6 +184,15 @@ ConfigPage {
 			suffix: i18n("px")
 			minimumValue: 16
 			maximumValue: sidebarButtonSize.configValue
+			stepSize: 2
+		}
+		
+		ConfigSpinBox {
+			id: sidebarPopupButtonSize
+			configKey: 'sidebarPopupButtonSize'
+			before: i18n("Popup Button Height")
+			suffix: i18n("px")
+			minimumValue: 24
 			stepSize: 2
 		}
 
@@ -284,6 +312,11 @@ ConfigPage {
 	ConfigSection {
 		label: i18n("Search Box")
 
+		ConfigCheckBox {
+			configKey: 'hideSearchField'
+			text: i18n("Hide Search Field")
+		}
+
 		ConfigSpinBox {
 			configKey: 'searchFieldHeight'
 			before: i18n("Search Field Height")
@@ -303,6 +336,16 @@ ConfigPage {
 			checked: !plasmoid.configuration.searchFieldFollowsTheme
 			onClicked: plasmoid.configuration.searchFieldFollowsTheme = false
 		}
+
+		// For debugging purposes.
+		// User can configures the Filters in the SearchView
+		// ConfigStringList {
+		// 	configKey: 'searchDefaultFilters'
+		// 	textArea.readOnly: true
+		// 	function serialize() {
+		// 		// Do nothing
+		// 	}
+		// }
 	}
 
 	ConfigSection {
@@ -350,7 +393,7 @@ ConfigPage {
 		RowLayout {
 			ConfigCheckBox {
 				id: showRecentAppsCheckBox
-				text: i18nd("plasma_applet_org.kde.plasma.kicker", "Show:")
+				text: i18n("Show:")
 				configKey: 'showRecentApps'
 			}
 			ConfigSpinBox {
@@ -366,8 +409,9 @@ ConfigPage {
 				configKey: 'recentOrdering'
 				label: ""
 				model: [
-					{ value: 0, text: i18nd("plasma_applet_org.kde.plasma.kicker", "Show recent applications") },
-					{ value: 1, text: i18nd("plasma_applet_org.kde.plasma.kicker", "Show often used applications") },
+					// TODO: Use plasma_applet_org.kde.plasma.kicker domain after depending on Plasma 5.18
+					{ value: 0, text: i18n("Recent applications") }, 
+					{ value: 1, text: i18n("Often used applications") },
 				]
 			}
 		}
